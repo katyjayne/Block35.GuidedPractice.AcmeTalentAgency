@@ -12,6 +12,8 @@ const {
 const express = require("express");
 const app = express();
 
+app.use(express.json());
+
 app.get("/api/skills", async (req, res, next) => {
   try {
     res.send(await fetchSkills());
@@ -34,6 +36,32 @@ app.get("/api/users/:id/userSkills", async (req, res, next) => {
   } catch (ex) {
     next(ex);
   }
+});
+
+app.delete("/api/users/:userId/userSkills/:id", async (req, res, next) => {
+  try {
+    await destroyUserSkill({ user_id: req.params.userId, id: req.params.id });
+    res.sendStatus(204);
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.post("/api/users/:userId/userSkills", async (req, res, next) => {
+  try {
+    const userSkill = await createUserSkill({
+      user_id: req.params.userId,
+      skill_id: req.body.skill_id,
+    });
+    res.sendStatus(201).send(userSkill);
+  } catch (ex) {
+    next(ex);
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(err.status || 500).send({ error: err.message || err });
 });
 
 const init = async () => {
@@ -82,6 +110,12 @@ const init = async () => {
     console.log(`curl localhost:${port}/api/skills`);
     console.log(`curl localhost:${port}/api/users`);
     console.log(`curl localhost:${port}/api/users/${ali.id}/userSkills`);
+    console.log(
+      `curl -X DELETE localhost:${port}/api/users/${ali.id}/userSkills/${aliBreakdancing.id}`
+    );
+    console.log(
+      `curl -X POST localhost:${port}/api/users/${juanpablo.id}/userSkills -d '{"skill_id": "${wizardry.id}"}' -H "Content-Type:application/json"`
+    );
   });
 };
 
